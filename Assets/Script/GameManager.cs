@@ -65,9 +65,35 @@ public class GameManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0) && CanMouseDown)
             {
-                CanMouseDown = false;
-                CountDown = 10;
-                StartCoroutine(ChangPosition());
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    Debug.Log(hit.collider.gameObject.name);
+                    if(hit.collider.gameObject.name == "Dice001")
+                    {
+                        CanMouseDown = false;
+                        CountDown = 10;
+                        StartCoroutine(ChangPosition());
+                    }
+                    else
+                    {
+                        CountDown -= Time.deltaTime;
+                        if (CountDown < 0)
+                        {
+                            CanMouseDown = false;
+                            CountDown = 10;
+                            StartCoroutine(ChangPosition());
+
+                        }
+                        // Show CountDown in UIGAMEPLAY
+                        UIGamePlay.ShowTimer(CountDown);
+                    }
+                }
+
+
+                
             }
             else if (CanMouseDown)
             {
@@ -90,7 +116,6 @@ public class GameManager : MonoBehaviour
     {
         rollDice.DiceRoll();
         yield return new WaitForSeconds(2.25f);
-        Debug.Log(rollDice.diceFaceNum);
         int countChangePosition = rollDice.diceFaceNum;
 
         int i = 0;
