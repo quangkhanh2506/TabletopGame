@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject FinishSide;
     [SerializeField] private GameObject startSide;
     [SerializeField] private List<GameObject> lsPosistions = new List<GameObject>();
+    [SerializeField] private SetWay setWay;
 
     [HideInInspector] public GameObject NowMovePlayer;
 
@@ -42,6 +43,7 @@ public class GameManager : MonoBehaviour
 
     public void SetUp()
     {
+        setWay.Onsetup();
         TurnManager.instance.SetUp();
 
         TurnManager.instance.player1.transform.position = new Vector3(startSide.transform.position.x+0.03f, startSide.transform.position.y, startSide.transform.position.z);
@@ -57,6 +59,8 @@ public class GameManager : MonoBehaviour
         CountDown = 10;
         UIGamePlay.ShowTimer(CountDown);
 
+        
+
     }
 
     private void Update()
@@ -70,7 +74,6 @@ public class GameManager : MonoBehaviour
 
                 if (Physics.Raycast(ray, out hit))
                 {
-                    Debug.Log(hit.collider.gameObject.name);
                     if(hit.collider.gameObject.name == "Dice001")
                     {
                         CanMouseDown = false;
@@ -133,6 +136,25 @@ public class GameManager : MonoBehaviour
             NowMovePlayer.transform.position = new Vector3(FinishSide.transform.position.x + offsetPosition, FinishSide.transform.position.y, FinishSide.transform.position.z);
             lsFinishPlayer.Add(NowMovePlayer);
         }
+
+        if (setWay.BadWays.Contains(NowCountPosition - 1))
+        {
+            NowCountPosition -= 2;
+            for (int j = 0; j < 3; j++)
+            {
+                yield return new WaitForSeconds(0.5f);
+                NowMovePlayer.transform.position = new Vector3(lsPosistions[NowCountPosition].transform.position.x + offsetPosition, lsPosistions[NowCountPosition].transform.position.y, lsPosistions[NowCountPosition].transform.position.z);
+                NowCountPosition--;
+            }
+            NowCountPosition+=2;
+        }
+        if (setWay.LuckyWays.Contains(NowCountPosition - 1))
+        {
+            yield return new WaitForSeconds(0.5f);
+            NowMovePlayer.transform.position = new Vector3(lsPosistions[NowCountPosition].transform.position.x + offsetPosition, lsPosistions[NowCountPosition].transform.position.y, lsPosistions[NowCountPosition].transform.position.z);
+            NowCountPosition++;
+        }
+
 
         if (TurnManager.instance.turn % 2 == 0)
         {
