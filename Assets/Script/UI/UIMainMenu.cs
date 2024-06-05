@@ -17,6 +17,7 @@ public class UIMainMenu : MonoBehaviour
     {
         //Access photon
         UIManager.instance.HideUI(UI.UIMainMenu);
+        GameManager.instance.isLeaveRoom = false;
         NetworkManager.instance.ConnectToPhoton();
         
     }

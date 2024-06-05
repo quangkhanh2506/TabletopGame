@@ -21,28 +21,38 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
     }
 
+
     public void ConnectToPhoton()
     {
-        if (!PhotonNetwork.IsConnected)
+
+        if (!GameManager.instance.isLeaveRoom)
         {
-            PhotonNetwork.ConnectUsingSettings();
+            if (!PhotonNetwork.IsConnected)
+            {
+                PhotonNetwork.ConnectUsingSettings();
+            }
+            else
+            {
+                OnConnectedToMaster();
+            }
         }
-        else
-        {
-            JoinRandomRoom();
-        }
+        
     }
 
     public override void OnConnectedToMaster()
     {
         Debug.Log("Connected to Photon Master Server");
         PhotonNetwork.JoinLobby();
+
     }
 
     public override void OnJoinedLobby()
     {
         Debug.Log("Joined Lobby");
-        JoinRandomRoom();
+        if (!GameManager.instance.isLeaveRoom)
+        {
+            JoinRandomRoom();
+        }
     }
 
     public void JoinRandomRoom()
@@ -90,6 +100,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             }
         }
     }
+
 
     [PunRPC]
     private void StartGame()

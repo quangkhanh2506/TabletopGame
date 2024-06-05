@@ -3561,10 +3561,13 @@ MonoBehaviour:
   - {fileID: 901117086}
   - {fileID: 209657821}
   setWay: {fileID: 247798535}
+  PositionResetPlayer1: {fileID: 271254197}
+  PositionResetPlayer2: {fileID: 1834539358}
   NowMovePlayer: {fileID: 0}
   NowCountPosition: 0
   offsetPosition: 0
   UIGamePlay: {fileID: 1736199594}
+  lsFinishPlayer: []
   gameMode: 0
   rollDice: {fileID: 668606441}
 --- !u!4 &751364317
@@ -6833,6 +6836,7 @@ GameObject:
   - component: {fileID: 1736199593}
   - component: {fileID: 1736199592}
   - component: {fileID: 1736199594}
+  - component: {fileID: 1736199595}
   m_Layer: 5
   m_Name: UIGameplay
   m_TagString: Untagged
@@ -6913,6 +6917,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   txtTimer: {fileID: 1440136782}
+--- !u!114 &1736199595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736199590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eda616edadf944420ae5ce699cf121bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PositionResetPlayer1: {fileID: 271254197}
+  PositionResetPlayer2: {fileID: 1834539358}
 --- !u!1 &1800474962
 GameObject:
   m_ObjectHideFlags: 0
