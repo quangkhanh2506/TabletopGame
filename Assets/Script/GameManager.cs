@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,6 +22,8 @@ public class GameManager : MonoBehaviour
 
     private List<GameObject> lsFinishPlayer = new List<GameObject>();
 
+    [HideInInspector] public GameMode gameMode;
+
     private bool CanMouseDown;
 
     public RollDice rollDice;
@@ -27,6 +31,8 @@ public class GameManager : MonoBehaviour
     private bool isStart;
 
     private float CountDown;
+
+    private PhotonView photonView;
 
     private void Awake()
     {
@@ -39,6 +45,8 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        photonView = GetComponent<PhotonView>();
     }
 
     public void SetUp()
@@ -46,11 +54,8 @@ public class GameManager : MonoBehaviour
         setWay.Onsetup();
         TurnManager.instance.SetUp();
 
-        TurnManager.instance.player1.transform.position = new Vector3(startSide.transform.position.x+0.03f, startSide.transform.position.y, startSide.transform.position.z);
-
-        TurnManager.instance.player2.transform.position = new Vector3(startSide.transform.position.x-0.03f, startSide.transform.position.y, startSide.transform.position.z);
-
-
+        TurnManager.instance.player1.transform.position = new Vector3(startSide.transform.position.x + 0.03f, startSide.transform.position.y, startSide.transform.position.z);
+        TurnManager.instance.player2.transform.position = new Vector3(startSide.transform.position.x - 0.03f, startSide.transform.position.y, startSide.transform.position.z);
         TurnManager.instance.ChangeTurn();
 
         CanMouseDown = true;
@@ -69,34 +74,22 @@ public class GameManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0) && CanMouseDown)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-
-                if (Physics.Raycast(ray, out hit))
+                if (gameMode==GameMode.Offline ||(PhotonNetwork.IsMasterClient && TurnManager.instance.turn % 2 == 1) || (!PhotonNetwork.IsMasterClient && TurnManager.instance.turn % 2 == 0))
                 {
-                    if(hit.collider.gameObject.name == "Dice001")
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(ray, out hit))
                     {
-                        CanMouseDown = false;
-                        CountDown = 10;
-                        StartCoroutine(ChangPosition());
-                    }
-                    else
-                    {
-                        CountDown -= Time.deltaTime;
-                        if (CountDown < 0)
+                        if (hit.collider.gameObject.name == "Dice001")
                         {
                             CanMouseDown = false;
                             CountDown = 10;
                             StartCoroutine(ChangPosition());
-
                         }
-                        // Show CountDown in UIGAMEPLAY
-                        UIGamePlay.ShowTimer(CountDown);
                     }
                 }
 
-
-                
             }
             else if (CanMouseDown)
             {
@@ -119,8 +112,27 @@ public class GameManager : MonoBehaviour
     {
         rollDice.DiceRoll();
         yield return new WaitForSeconds(2.25f);
-        int countChangePosition = rollDice.diceFaceNum;
+        int diceValue = rollDice.diceFaceNum;
+        if (gameMode == GameMode.Online)
+        {
+            photonView.RPC("MovePlayer", RpcTarget.All, diceValue);
+        }
+        else
+        {
+            MovePlayer(diceValue);
+        }
+        
+        
+    }
 
+    [PunRPC]
+    public void MovePlayer(int countChangePosition)
+    {
+        StartCoroutine(Move(countChangePosition));
+    }
+
+    IEnumerator Move(int countChangePosition)
+    {
         int i = 0;
 
         for (i = 0; i < countChangePosition && NowCountPosition < lsPosistions.Count; i++)
@@ -129,7 +141,7 @@ public class GameManager : MonoBehaviour
             NowMovePlayer.transform.position = new Vector3(lsPosistions[NowCountPosition].transform.position.x + offsetPosition, lsPosistions[NowCountPosition].transform.position.y, lsPosistions[NowCountPosition].transform.position.z);
             NowCountPosition++;
         }
-        if(NowCountPosition == 23 && (countChangePosition - i) > 0)
+        if (NowCountPosition == 23 && (countChangePosition - i) > 0)
         {
             yield return new WaitForSeconds(0.5f);
             NowCountPosition++;
@@ -146,7 +158,7 @@ public class GameManager : MonoBehaviour
                 NowMovePlayer.transform.position = new Vector3(lsPosistions[NowCountPosition].transform.position.x + offsetPosition, lsPosistions[NowCountPosition].transform.position.y, lsPosistions[NowCountPosition].transform.position.z);
                 NowCountPosition--;
             }
-            NowCountPosition+=2;
+            NowCountPosition += 2;
         }
         if (setWay.LuckyWays.Contains(NowCountPosition - 1))
         {
@@ -154,7 +166,6 @@ public class GameManager : MonoBehaviour
             NowMovePlayer.transform.position = new Vector3(lsPosistions[NowCountPosition].transform.position.x + offsetPosition, lsPosistions[NowCountPosition].transform.position.y, lsPosistions[NowCountPosition].transform.position.z);
             NowCountPosition++;
         }
-
 
         if (TurnManager.instance.turn % 2 == 0)
         {
@@ -166,8 +177,18 @@ public class GameManager : MonoBehaviour
         }
         NowMovePlayer = null;
         TurnManager.instance.ChangeTurn();
-        
-        CanMouseDown = TurnManager.instance.Result();
+
+        if (gameMode == GameMode.Online)
+        {
+            if((PhotonNetwork.IsMasterClient && TurnManager.instance.turn % 2 == 1) || (!PhotonNetwork.IsMasterClient && TurnManager.instance.turn % 2 == 0))
+            {
+                CanMouseDown = TurnManager.instance.Result();
+            }
+        }
+        else
+        {
+            CanMouseDown = TurnManager.instance.Result();
+        }
     }
 
     public List<GameObject> LsRankPlayer()
@@ -199,4 +220,11 @@ public class GameManager : MonoBehaviour
         isStart = false;
         UIGamePlay.ShowTimer(10);
     }
+}
+
+public enum GameMode
+{
+    Offline,
+    Online,
+    Count
 }

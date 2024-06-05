@@ -19,4 +19,6 @@ public class UIGamePlay : MonoBehaviour
         UIManager.instance.ShowBG();
 
     }
+
+    
 }
